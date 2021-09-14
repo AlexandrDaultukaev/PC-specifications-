@@ -58,5 +58,5 @@ then
 fi
 
 echo -e "№ | Имя сет. инт. | MAC-адрес         | IP-адрес     | Скорость соед. |"
-echo -e "1 | $name1        | $mac1 | $ip1  | $speed1           |"
-echo -e "2 | $name2            | $mac2              | $ip2    | $speed2           |"
+echo -e "1 | $name1            | $mac1 | $ip1    | $speed1           |"
+echo -e "2 | $name2     | $mac2              | $ip2  | $speed2               |"
