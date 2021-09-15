@@ -34,8 +34,8 @@ ls -A /sys/class/net > file.txt
 name1=$(awk 'NR == 1{print $1}' file.txt)
 name2=$(awk 'NR == 2{print $1}' file.txt)
 ifconfig -a > file.txt
-mac1=$(awk '{if ($1 == "ether") {print $2}}' file.txt)
-mac2=$(awk -v other_mac="$mac1" '{if ($1 == "ether" && $2 != other_mac) {print $2}}' file.txt)
+mac1=$(awk 'NR < 10{if ($1 == "ether") {print $2; exit;}}' file.txt)
+mac2=$(awk -v other_mac="$mac1" '{if ($1 == "ether" && $2 != other_mac) {print $2; exit;}}' file.txt)
 if [ -z "$mac2" ]
 then
     mac2="none"
@@ -45,18 +45,40 @@ then
     mac1="none"
 fi
 ip1=$(awk '{if ($1 == "inet") {print $2; exit;}}' file.txt)
-ip2=$(awk -v other_ip="$ip1" '{if ($1 == "inet" && $2 != other_ip) {print $2}}' file.txt)
-#speed1=$(cat /sys/class/net/$name1/speed)
-speed1="none"
-if [ $ip2 == "127.0.0.1" ]
+ip2=$(awk -v other_ip="$ip1" '{if ($1 == "inet" && $2 != other_ip) {print $2; exit;}}' file.txt)
+if [ -z "$ip1" ]
+then
+    ip1="none"
+fi
+if [ -z "$ip2" ]
+then
+    ip2="none"
+fi
+($(cat /sys/class/net/$name2/speed)) 2> err.txt
+if [ $? -ne 0 ]
+then
+    echo "Не могу посмотреть speed для сетевого интерфейса $name2"
+    speed2="none"
+else
+    speed2=$(cat /sys/class/net/$name2/speed)
+fi
+($(cat /sys/class/net/$name1/speed)) 2> err.txt
+if [ $? -ne 0 ]
+then
+    echo "Не могу посмотреть speed для сетевого интерфейса $name1"
+    speed1="none"
+else
+    speed1=$(cat /sys/class/net/$name2/speed)
+fi
+if [ $ip2 == "127.0.0.1" ] || [ -z "$ip2" ]
 then
     speed2="none"
 fi
-if [ $ip1 == "127.0.0.1" ]
+if [ $ip1 == "127.0.0.1" ] || [ -z "$ip1" ]
 then
     speed1="none"
 fi
 
 echo -e "№ | Имя сет. инт. | MAC-адрес         | IP-адрес     | Скорость соед. |"
-echo -e "1 | $name1            | $mac1 | $ip1    | $speed1           |"
-echo -e "2 | $name2     | $mac2              | $ip2  | $speed2               |"
+echo -e "1 | $name1            | $mac1              | $ip1    | $speed1           |"
+echo -e "2 | $name2     | $mac2 | $ip2| $speed2           |"
